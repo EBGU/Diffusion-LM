@@ -1,0 +1,11 @@
+initializing : "/bert-base-uncased"
+resume: 'none'
+AMP : False 
+framework : 'bert_diffusion'
+num_gpus : 4
+batch_size : 512
+epoch : [0,500]
+base_lr : 0.00002 # per 512
+dataStorage : ["/ROCstory_train.csv","/ROCstory_test.csv"]
+diff_step : 2000
+max_len : 64
