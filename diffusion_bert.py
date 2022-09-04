@@ -158,32 +158,25 @@ class diffusion_bert(nn.Module):
         pred = torch.argmax(prediction_scores,-1).long()
         return pred
 
+
 if __name__ == "__main__":
-    initializing = '/home/haroldjia/Harold_Laptop_WSL/Temp/diffusion_model/diffusion_bert/bert-base-uncased'
+    import os,sys
+    get_path = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(get_path)
+    initializing = get_path+'/bert-base-uncased'
     max_len = 64
     diff_step = 2000
     device = torch.device('cuda')
     model = diffusion_bert(initializing,max_len,diff_step)
-    state = torch.load("/home/haroldjia/Harold_Laptop_WSL/Temp/diffusion_model/diffusion_bert/Saved_Models/20220822bert_diffusion/bestloss.pkl")
+    state = torch.load(get_path+'/'+sys.argv[1]) #"/Saved_Models/20220903bert_diffusion/bestloss.pkl")
     model.load_state_dict(state,strict=True)
     model = model.to(device)
     model.eval()
     
-    test_set = ROCstory("/home/haroldjia/Harold_Laptop_WSL/Temp/diffusion_model/diffusion_bert/ROCstory_test.csv",init_model=initializing,max_len=max_len)
-    out = model.sampler(device,1,32)
+    test_set = ROCstory(get_path+"/ROCstory_test.csv",init_model=initializing,max_len=max_len)
+    out = model.sampler(device,int(sys.argv[2]),int(sys.argv[3]))
+    f = open(get_path+"/samples.txt",'w')
     for s in out:
         sample = test_set.tokenizer.decode(s.cpu().flatten())
-        print(sample)        
-
-    #debug: test training
-    test_set = ROCstory("/home/haroldjia/Harold_Laptop_WSL/Temp/diffusion_model/diffusion_bert/ROCstory_test.csv",init_model=initializing,max_len=max_len)
-    input_ids,token_type_ids,attention_mask = test_set.__getitem__(3)
-    input_ids = input_ids.unsqueeze_(0).to(device)
-    token_type_ids = token_type_ids.unsqueeze_(0).to(device)
-    attention_mask = attention_mask.unsqueeze_(0).to(device)
-    for t in range(0,2000,100):
-        with torch.no_grad():
-            loss,prediction_scores,diffusion_steps = model(input_ids,token_type_ids,attention_mask,t)
-        pred = torch.argmax(prediction_scores,-1).cpu()
-        pred = test_set.tokenizer.decode(pred.flatten())
-        print(pred)
+        f.write(sample+"\n")  
+    f.close()      
